@@ -19,7 +19,7 @@
       <h3>处理结果图片</h3>
       <div class="image-gallery">
         <div v-for="image in images" :key="image" class="image-container">
-          <img :src="image" class="result-image" />
+          <img :src="`${this.$httpUrl}/results/${image}`" class="result-image" />
         </div>
       </div>
     </div>
@@ -69,7 +69,6 @@ export default {
       if (this.mediaRecorder && this.isRecording) {
         this.mediaRecorder.stop();
         this.isRecording = false;
-        this.loadImages();
       }
     },
     async sendVideo(blob) {
@@ -84,14 +83,16 @@ export default {
           }
         });
         this.results = response.data;
+        this.loadImages();
       } catch (error) {
         console.error('Error uploading video:', error);
       }
     },
     async loadImages() {
       try {
-        const response = await this.$axios.get('/api/results');
-        this.images = response.data.map(image => `/Datas/results/${image}`);
+        const response = await this.$axios.get('/results');
+        this.images = response.data;
+        console.log(this.images);
       } catch (error) {
         console.error('Error loading images:', error);
       }
