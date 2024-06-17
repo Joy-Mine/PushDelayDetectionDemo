@@ -19,8 +19,16 @@
       <h3>处理结果图片</h3>
       <div class="image-gallery">
         <div v-for="image in images" :key="image" class="image-container">
-          <img :src="`${this.$httpUrl}/results/${image}`" class="result-image" />
+          <img :src="`${this.$httpUrl}/results/${image}`" class="result-image" @click="showImage(image)" />
         </div>
+      </div>
+    </div>
+
+    <!-- 模态框，用于显示放大的图片 -->
+    <div v-if="selectedImage" class="modal" @click="closeModal">
+      <div class="modal-content">
+        <span class="close" @click="closeModal">&times;</span>
+        <img :src="`${this.$httpUrl}/results/${selectedImage}`" class="modal-image" />
       </div>
     </div>
   </div>
@@ -35,7 +43,8 @@ export default {
       results: '',
       model: this.$route.params.model,
       isRecording: false,
-      images: []
+      images: [],
+      selectedImage: null
     };
   },
   methods: {
@@ -96,6 +105,12 @@ export default {
       } catch (error) {
         console.error('Error loading images:', error);
       }
+    },
+    showImage(image) {
+      this.selectedImage = image;
+    },
+    closeModal() {
+      this.selectedImage = null;
     }
   }
 };
@@ -118,5 +133,52 @@ export default {
 .result-image {
   width: 100%;
   height: auto;
+  cursor: pointer;
+}
+
+/* 模态框样式 */
+.modal {
+  display: flex;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.modal-image {
+  width: 100%;
+  height: auto;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
 }
 </style>
