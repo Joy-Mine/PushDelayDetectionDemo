@@ -171,19 +171,34 @@ public class UploadController {
                 ProcessBuilder processBuilder = new ProcessBuilder("conda", "run", "-n", condaEnvName, "python", "YOLOv1_stock/predict_single.py", model, frameFile.getAbsolutePath(), outputImagePath);
                 Process process = processBuilder.start();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
+                BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
                 StringBuilder result = new StringBuilder();
-                while ((line = reader.readLine()) != null) {
+                String line;
+
+                // 读取标准输出
+                System.out.println("Standard Output:");
+                while ((line = stdOutput.readLine()) != null) {
                     result.append(line).append("\n");
+                    System.out.println(line);
+                }
+
+                // 读取错误输出
+                System.out.println("Error Output:");
+                StringBuilder errorOutput = new StringBuilder();
+                while ((line = stdError.readLine()) != null) {
+                    errorOutput.append(line).append("\n");
+                    System.err.println(line);
                 }
 
                 int exitCode = process.waitFor();
                 if (exitCode == 0) {
                     results.add(result.toString());
                 } else {
-//                    results.add("Error processing frame: " + frameFile.getName());
                     System.out.println("Error processing frame: " + frameFile.getName());
+                    System.err.println("Error Output:\n" + errorOutput.toString());
+
                     // 如果处理某一帧遇到错误时，直接存储此帧对应的原图片到outputImagePath
                     File outputFile = new File(outputImagePath);
                     if (frameFile.exists()) {
