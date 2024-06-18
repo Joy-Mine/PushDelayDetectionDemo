@@ -66,7 +66,7 @@ public class UploadController {
 
     @PostMapping("/upload")
     public String handleFileUpload(@RequestParam("file") MultipartFile file, @RequestParam("model") String model) {
-        model = "./save_weights/weight_May01_22-47-46.pth";
+        model = "./save_weights/weight_Jun16_09-31-26.pth";
         try {
             // 获取Spring Boot项目根目录的上一级目录
             String rootPath = System.getProperty("user.dir");
@@ -165,9 +165,10 @@ public class UploadController {
                     })
                     .collect(Collectors.toList());
 
+            String condaEnvName = "yolov1_py365";
             for (File frameFile : frameFiles) {
                 String outputImagePath = resultsDirectoryPath + frameFile.getName();
-                ProcessBuilder processBuilder = new ProcessBuilder("python", "YOLOv1_stock/predict_single.py", model, frameFile.getAbsolutePath(), outputImagePath);
+                ProcessBuilder processBuilder = new ProcessBuilder("conda", "run", "-n", condaEnvName, "python", "YOLOv1_stock/predict_single.py", model, frameFile.getAbsolutePath(), outputImagePath);
                 Process process = processBuilder.start();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
