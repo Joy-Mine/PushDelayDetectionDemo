@@ -6,8 +6,10 @@ import axios from 'axios';
 const app = createApp(App);
 
 const httpUrl = 'http://localhost:8088/api';
+// const httpUrl = 'http://8.138.33.56:8088/api';
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:8088/api',
+    // baseURL: 'http://8.138.33.56:8088/api',
     headers: {
         'Content-Type': 'application/json',
     }

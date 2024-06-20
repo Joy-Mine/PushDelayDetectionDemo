@@ -66,7 +66,8 @@ public class UploadController {
 
     @PostMapping("/upload")
     public String handleFileUpload(@RequestParam("file") MultipartFile file, @RequestParam("model") String model) {
-        model = "./save_weights/weight_Jun16_09-31-26.pth";
+//        model = "save_weights/weight_Jun16_09-31-26.pth";
+        model = "C:\\Users\\Simon\\GithubProjects\\PushDelayDetectionDemo\\YOLOv1_stock\\save_weights\\weight_Jun16_09-31-26.pth";
         try {
             // 获取Spring Boot项目根目录的上一级目录
             String rootPath = System.getProperty("user.dir");
@@ -110,10 +111,10 @@ public class UploadController {
             extractFramesWithJavacv(convFile.getAbsolutePath(), framesDirectoryPath);
 
             // 调用Python脚本处理所有帧图片
-            List<String> results = processFramesWithPython(model, framesDirectoryPath, resultsDirectoryPath);
+            String result = processFramesWithPython(model, framesDirectoryPath, resultsDirectoryPath);
 
             // 返回处理结果
-            return String.join("\n", results);
+            return result;
         } catch (IOException e) {
             e.printStackTrace();
             return "File upload failed: " + e.getMessage();
@@ -143,7 +144,6 @@ public class UploadController {
                 File frameFile = new File(framesDirectoryPath + "frame_" + frameNumber + ".png");
                 ImageIO.write(bufferedImage, "png", frameFile);
                 frameNumber++;
-                //todo:解析出一张图片立马识别
             }
 
             grabber.stop();
@@ -152,65 +152,44 @@ public class UploadController {
         }
     }
 
-    private List<String> processFramesWithPython(String model, String framesDirectoryPath, String resultsDirectoryPath) {
-        List<String> results = new ArrayList<>();
+    private String processFramesWithPython(String model, String framesDirectoryPath, String resultsDirectoryPath) {
         try {
-            List<File> frameFiles = java.nio.file.Files.list(java.nio.file.Paths.get(framesDirectoryPath))
-                    .filter(java.nio.file.Files::isRegularFile)
-                    .map(path -> path.toFile())
-                    .sorted((f1, f2) -> {
-                        int n1 = Integer.parseInt(f1.getName().replaceAll("\\D", ""));
-                        int n2 = Integer.parseInt(f2.getName().replaceAll("\\D", ""));
-                        return Integer.compare(n1, n2);
-                    })
-                    .collect(Collectors.toList());
-
             String condaEnvName = "yolov1_py365";
-            for (File frameFile : frameFiles) {
-                String outputImagePath = resultsDirectoryPath + frameFile.getName();
-                ProcessBuilder processBuilder = new ProcessBuilder("conda", "run", "-n", condaEnvName, "python", "YOLOv1_stock/predict_single.py", model, frameFile.getAbsolutePath(), outputImagePath);
-                Process process = processBuilder.start();
+            ProcessBuilder processBuilder = new ProcessBuilder("conda", "run", "-n", condaEnvName, "python", "YOLOv1_stock/predict_single.py", model, framesDirectoryPath, resultsDirectoryPath);
+            Process process = processBuilder.start();
 
-                BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
-                StringBuilder result = new StringBuilder();
-                String line;
+            StringBuilder result = new StringBuilder();
+            String line;
 
-                // 读取标准输出
-                System.out.println("Standard Output:");
-                while ((line = stdOutput.readLine()) != null) {
-                    result.append(line).append("\n");
-                    System.out.println(line);
-                }
+            // 读取标准输出
+            System.out.println("Standard Output:");
+            while ((line = stdOutput.readLine()) != null) {
+                result.append(line).append("\n");
+                System.out.println(line);
+            }
 
-                // 读取错误输出
-                System.out.println("Error Output:");
-                StringBuilder errorOutput = new StringBuilder();
-                while ((line = stdError.readLine()) != null) {
-                    errorOutput.append(line).append("\n");
-                    System.err.println(line);
-                }
+            // 读取错误输出
+            System.out.println("Error Output:");
+            StringBuilder errorOutput = new StringBuilder();
+            while ((line = stdError.readLine()) != null) {
+                errorOutput.append(line).append("\n");
+                System.err.println(line);
+            }
 
-                int exitCode = process.waitFor();
-                if (exitCode == 0) {
-                    results.add(result.toString());
-                } else {
-                    System.out.println("Error processing frame: " + frameFile.getName());
-                    System.err.println("Error Output:\n" + errorOutput.toString());
-
-                    // 如果处理某一帧遇到错误时，直接存储此帧对应的原图片到outputImagePath
-                    File outputFile = new File(outputImagePath);
-                    if (frameFile.exists()) {
-                        ImageIO.write(ImageIO.read(frameFile), "png", outputFile);
-                    }
-                }
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return result.toString();
+            } else {
+                System.out.println("Error processing frames.");
+                System.err.println("Error Output:\n" + errorOutput.toString());
+                return "Error processing frames.";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            results.add("Error processing frames in directory: " + framesDirectoryPath + " - " + e.getMessage());
+            return "Error processing frames in directory: " + framesDirectoryPath + " - " + e.getMessage();
         }
-
-        return results;
     }
 }

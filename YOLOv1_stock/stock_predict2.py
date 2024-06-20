@@ -246,11 +246,11 @@ if __name__ == '__main__':
     print('load model done!')
     model.eval()
     model.cuda()
-    cal_mAP = True
+    cal_mAP = False
     image_name_list = []
     if not cal_mAP:
         # 设置图片路径
-        base_path = '../data/frames/'
+        base_path = '../Datas/frames/'
         # base_path = './stock_test_images_new/'
         image_name_list = [base_path + i for i in os.listdir(base_path)]
     else:
@@ -287,7 +287,7 @@ if __name__ == '__main__':
             # time.sleep(2)
             # 是否保存结果图片
             base_image_name = os.path.basename(image_name)
-            cv2.imwrite(f'../data//result/{base_image_name}', image)
+            cv2.imwrite(f'../Datas/result/{base_image_name}', image)
             # cv2.imwrite(f'./stock_test_images_new_results/result_{base_image_name}', image)
     else:
         print('calculating mAP....')
